@@ -21,7 +21,8 @@ public class UnitController : MonoBehaviour {
     [SerializeField]
     private bool moving = false;
 
-    private Vector2 pos;
+    [HideInInspector]
+    public Vector2 pos;
 
     [SerializeField]
     private GameObject[] tilesAround;
@@ -32,6 +33,11 @@ public class UnitController : MonoBehaviour {
     [SerializeField]
     private Vector2 curMousPos;
     private bool newPositionSet = false;
+    
+    public GameObject shadow;
+
+    GameObject closestDragTile = null;
+    float minimumDragDistance = 100f;
 
     void Start()
     {
@@ -74,26 +80,55 @@ public class UnitController : MonoBehaviour {
                 tilesAround[i] = null;
         }
 
-        RaycastHit2D hitUp = Physics2D.Raycast(pos, Vector2.up, 1.5f, 1<<8);
-        RaycastHit2D hitRight = Physics2D.Raycast(pos, Vector2.right, 1.5f, 1 << 8);
-        RaycastHit2D hitDown = Physics2D.Raycast(pos, Vector2.down, 1.5f, 1 << 8);
-        RaycastHit2D hitLeft = Physics2D.Raycast(pos, Vector2.left, 1.5f, 1 << 8);
+        if (unitColor == UnitColor.Red)
+        {
+            RaycastHit2D hitUp = Physics2D.Raycast(pos, Vector2.up, 1.5f, 1 << 8);
+            RaycastHit2D hitRight = Physics2D.Raycast(pos, Vector2.right, 1.5f, 1 << 8);
+            RaycastHit2D hitLeft = Physics2D.Raycast(pos, Vector2.left, 1.5f, 1 << 8);
 
-        if (hitUp.collider != null)
-        {
-            tilesAround[0] = hitUp.collider.gameObject;
+            if (hitUp.collider != null)
+            {
+                tilesAround[0] = hitUp.collider.gameObject;
+            }
+            if (hitRight.collider != null)
+            {
+                tilesAround[1] = hitRight.collider.gameObject;
+            }
+            if (hitLeft.collider != null)
+            {
+                tilesAround[2] = hitLeft.collider.gameObject;
+            }
+            GameObject[] tiles = GameObject.FindGameObjectsWithTag("Cell");
+            foreach (GameObject i in tiles)
+            {
+                if (Vector2.Distance(transform.position, i.transform.position) < 0.1f)
+                    tilesAround[3] = i;
+            }
         }
-        if (hitRight.collider != null)
+        else
         {
-            tilesAround[1] = hitRight.collider.gameObject;
-        }
-        if (hitDown.collider != null)
-        {
-            tilesAround[2] = hitDown.collider.gameObject;
-        }
-        if (hitLeft.collider != null)
-        {
-            tilesAround[3] = hitLeft.collider.gameObject;
+            RaycastHit2D hitRight = Physics2D.Raycast(pos, Vector2.right, 1.5f, 1 << 8);
+            RaycastHit2D hitDown = Physics2D.Raycast(pos, Vector2.down, 1.5f, 1 << 8);
+            RaycastHit2D hitLeft = Physics2D.Raycast(pos, Vector2.left, 1.5f, 1 << 8);
+
+            if (hitRight.collider != null)
+            {
+                tilesAround[0] = hitRight.collider.gameObject;
+            }
+            if (hitDown.collider != null)
+            {
+                tilesAround[1] = hitDown.collider.gameObject;
+            }
+            if (hitLeft.collider != null)
+            {
+                tilesAround[2] = hitLeft.collider.gameObject;
+            }
+            GameObject[] tiles = GameObject.FindGameObjectsWithTag("Cell");
+            foreach (GameObject i in tiles)
+            {
+                if (Vector2.Distance(transform.position, i.transform.position) < 0.1f)
+                    tilesAround[3] = i;
+            }
         }
         
     }
@@ -114,7 +149,9 @@ public class UnitController : MonoBehaviour {
         {
             canMove = false;
             newPositionSet = false;
-            MoveToClosestTile();
+            //MoveToClosestTile();
+            MoveToNewTile();
+            MoveForward();
             GetTiles();
         }
     }
@@ -131,6 +168,9 @@ public class UnitController : MonoBehaviour {
                 if (i != null)
                     i.GetComponent<CellController>().ShowColor();
             }
+
+            closestDragTile = null;
+            minimumDragDistance = 100f;
         }
     }
 
@@ -143,14 +183,41 @@ public class UnitController : MonoBehaviour {
 
             curMousPos = objPosition;
 
-            transform.position = new Vector3(objPosition.x, objPosition.y, 0);
 
-            if (Vector2.Distance(lastMousePos, curMousPos) > 0.75f && !newPositionSet)
+            foreach (GameObject i in tilesAround)
+            {
+                if (i != null && Vector2.Distance(objPosition, i.transform.position) < 1)
+                {
+                    closestDragTile = i;
+                    //minimumDragDistance = Vector2.Distance(objPosition, i.transform.position);
+                }
+            }
+
+            transform.position = new Vector3(closestDragTile.transform.position.x, closestDragTile.transform.position.y, 0);
+
+            /*if (Vector2.Distance(lastMousePos, curMousPos) > 0.75f && !newPositionSet)
             {
                 newPositionSet = true;
                 MoveToNewTile();
             }
+            
+            if (tilesAround[0] != null && Vector2.Distance(tilesAround[0].transform.position, curMousPos) < 0.25f && !newPositionSet) {
 
+                newPositionSet = true;
+                MoveToNewTile();
+            }
+            else if (tilesAround[1] != null && Vector2.Distance(tilesAround[1].transform.position, curMousPos) < 0.25f && !newPositionSet)
+            {
+
+                newPositionSet = true;
+                MoveToNewTile();
+            }
+            else if (tilesAround[2] != null && Vector2.Distance(tilesAround[2].transform.position, curMousPos) < 0.25f && !newPositionSet)
+            {
+
+                newPositionSet = true;
+                MoveToNewTile();
+            }*/
         }
     }
 
@@ -158,16 +225,16 @@ public class UnitController : MonoBehaviour {
     {
         if (canMove && moving)
         {
-            moving = false;
+            //moving = false;
 
-            MoveToClosestTile();
+            //MoveToClosestTile();
+            MoveToNewTile();
 
             GetTiles();
             turnManager.playerMoved = true;
-            print(turnManager.playerMoved);
         }
     }
-
+    /*
     void MoveToClosestTile()
     {
         GameObject[] tiles = GameObject.FindGameObjectsWithTag("Cell");
@@ -182,45 +249,78 @@ public class UnitController : MonoBehaviour {
             }
         }
         transform.position = new Vector3(closestTile.transform.position.x, closestTile.transform.position.y, 0);
-    }
+    }*/
 
     void MoveToNewTile()
     {
-        moving = false;
-        GameObject closestTile = null;
-        float minimumDistance = 100f;
-
-        foreach (GameObject i in tilesAround)
+        if (moving)
         {
-            if (i != null && Vector2.Distance(transform.position, i.transform.position) < minimumDistance)
+            print("move");
+            moving = false;
+            GameObject closestTile = null;
+            float minimumDistance = 100f;
+
+            foreach (GameObject i in tilesAround)
             {
-                closestTile = i;
-                minimumDistance = Vector2.Distance(transform.position, i.transform.position);
+                if (i != null && Vector2.Distance(transform.position, i.transform.position) < minimumDistance)
+                {
+                    closestTile = i;
+                    minimumDistance = Vector2.Distance(transform.position, i.transform.position);
+                }
+            }
+
+            Instantiate(shadow, transform.position, transform.rotation);
+            transform.position = new Vector3(closestTile.transform.position.x, closestTile.transform.position.y, 0);
+
+            GameObject[] units = GameObject.FindGameObjectsWithTag(gameObject.tag);
+            GameObject closestUnit = null;
+            float distance = 0.5f;
+            foreach (GameObject i in units)
+            {
+                if (i != gameObject && Vector2.Distance(transform.position, i.transform.position) < distance)
+                {
+                    closestUnit = i;
+                    distance = Vector2.Distance(transform.position, i.transform.position);
+                }
+            }
+            if (closestUnit != null)
+            {
+                GameObject anotherShadow = closestUnit.GetComponent<UnitController>().shadow;
+                Instantiate(anotherShadow, closestUnit.gameObject.transform.position, closestUnit.gameObject.transform.rotation);
+                closestUnit.transform.position = pos;
+                closestUnit.GetComponent<UnitController>().pos = closestUnit.transform.position;
+            }
+
+            canMove = false;
+            newPositionSet = false;
+            //MoveToClosestTile();
+            GetTiles();
+            unitMoved = true;
+            turnManager.playerMoved = true;
+        }
+    }
+
+    void MoveForward()
+    {
+        if (unitColor == UnitColor.Red)
+        {
+            RaycastHit2D hitUp = Physics2D.Raycast(pos, Vector2.up, 1.5f, 1 << 8);
+            if (hitUp.collider != null)
+            {
+                Instantiate(shadow, transform.position, transform.rotation);
+                transform.position = hitUp.collider.gameObject.transform.position;
+                _animator.SetTrigger("MoveForward");
             }
         }
-
-        transform.position = new Vector3(closestTile.transform.position.x, closestTile.transform.position.y, 0);
-
-        GameObject[] units = GameObject.FindGameObjectsWithTag(gameObject.tag);
-        GameObject closestUnit = null;
-        float distance = 0.25f;
-        foreach (GameObject i in units)
+        else if (unitColor == UnitColor.Blue)
         {
-            if (i != gameObject && Vector2.Distance(transform.position, i.transform.position) < distance)
+            RaycastHit2D hitDown = Physics2D.Raycast(pos, Vector2.down, 1.5f, 1 << 8);
+            if (hitDown.collider != null)
             {
-                closestUnit = i;
-                distance = Vector2.Distance(transform.position, i.transform.position);
+                Instantiate(shadow, transform.position, transform.rotation);
+                transform.position = hitDown.collider.gameObject.transform.position;
+                _animator.SetTrigger("MoveForward");
             }
         }
-        if (closestUnit != null)
-            closestUnit.transform.position = pos;
-
-        canMove = false;
-        newPositionSet = false;
-        MoveToClosestTile();
-        GetTiles();
-        unitMoved = true;
-        turnManager.playerMoved = true;
-        print(turnManager.playerMoved);
     }
 }

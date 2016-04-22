@@ -32,7 +32,8 @@ public class TurnManager : MonoBehaviour {
     void Start()
     {
         curTime = turnTime;
-        curTimer = maxTimer;
+        maxTimer = turnTime;
+        curTimer = turnTime;
     }
 
     void HandleTimer()

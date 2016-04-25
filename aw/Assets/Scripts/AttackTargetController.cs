@@ -11,12 +11,17 @@ public class AttackTargetController : MonoBehaviour {
     [SerializeField]
     private UnitController unit;
 
+    [SerializeField]
+    private GameObject child;
+
     private bool haveTarget = false;
 
     void Start()
     {
         _sprite = GetComponent<SpriteRenderer>();
         _sprite.enabled = false;
+        child.SetActive(false);
+
     }
 
 	void OnTriggerEnter2D(Collider2D other)
@@ -24,19 +29,21 @@ public class AttackTargetController : MonoBehaviour {
         if (other.tag == "UnitBlue" && unit.unitColor == UnitColor.Red)
         {
             haveTarget = true;
-            print(unit.gameObject.name + " found " + other.gameObject.name);
+          //  print(unit.gameObject.name + " found " + other.gameObject.name);
             unit.enemyInRange.Add(other.gameObject);
             target.Add (other.gameObject);
             _sprite.enabled = true;
+            child.SetActive(true);
         }
             
         else if (other.tag == "UnitRed" && unit.unitColor == UnitColor.Blue)
         {
             haveTarget = true;
-            print(unit.gameObject.name + " found " + other.gameObject.name);
+           // print(unit.gameObject.name + " found " + other.gameObject.name);
             unit.enemyInRange.Add(other.gameObject);
             target.Add(other.gameObject);
             _sprite.enabled = true;
+            child.SetActive(true);
         }
     }
 
@@ -46,6 +53,7 @@ public class AttackTargetController : MonoBehaviour {
         {
             unit.enemyInRange.Clear();
             _sprite.enabled = false;
+            child.SetActive(false);
             target.Clear();
         }
     }
@@ -56,9 +64,10 @@ public class AttackTargetController : MonoBehaviour {
         {
             haveTarget = false;
             _sprite.enabled = false;
-           /* unit.enemyInRange.Clear();
-            print("clear " + unit.gameObject.name); */
-            
+            child.SetActive(false);
+            /* unit.enemyInRange.Clear();
+             print("clear " + unit.gameObject.name); */
+
         }
     }
 }

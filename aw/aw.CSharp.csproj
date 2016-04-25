@@ -65,8 +65,12 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\AttackRange.cs" />
     <Compile Include="Assets\Scripts\AttackTargetController.cs" />
+    <Compile Include="Assets\Scripts\CardController.cs" />
     <Compile Include="Assets\Scripts\CellController.cs" />
     <Compile Include="Assets\Scripts\DestroyOnTime.cs" />
+    <Compile Include="Assets\Scripts\GoToGame.cs" />
+    <Compile Include="Assets\Scripts\HeartsController.cs" />
+    <Compile Include="Assets\Scripts\ManaFeedbackController.cs" />
     <Compile Include="Assets\Scripts\ShadowController.cs" />
     <Compile Include="Assets\Scripts\TurnManager.cs" />
     <Compile Include="Assets\Scripts\UnitController.cs" />

@@ -29,9 +29,7 @@ public class UnitController : MonoBehaviour {
     [SerializeField]
     private GameObject[] tilesAround;
 
-
-    [SerializeField]
-    private Vector2 lastMousePos;
+    
     [SerializeField]
     private Vector2 curMousPos;
 
@@ -74,6 +72,9 @@ public class UnitController : MonoBehaviour {
                 Move();
             else
                 Stop();
+
+            if (transform.position.y > 4)
+                Score("RedScore");
         }
         else if (unitColor == UnitColor.Blue)
         {
@@ -81,8 +82,21 @@ public class UnitController : MonoBehaviour {
                 Move();
             else
                 Stop();
+
+            if (transform.position.y < -2)
+                Score("BlueScore");
+
         }
         ClearEnemies();
+    }
+
+    void Score(string color)
+    {
+        GetComponent<UnitHealth>().Damage(999);
+        if (color == "RedScore")
+            turnManager.blueLives -= 1;
+        else
+            turnManager.redLives -= 1;
     }
 
     void GetTiles()
@@ -100,6 +114,9 @@ public class UnitController : MonoBehaviour {
                 tilesAround[i] = null;
         }
 
+
+        print("GetTiles");
+
         if (unitColor == UnitColor.Red)
         { //ЗДЕСЬ НАДО УБИРАТЬ ДОСТУПНЫЕ ТАЙЛЫ ДЛЯ ДВИЖЕНИЯ ЕЖЕЛИ НА НИХ СТОИТ ВРАГ
             RaycastHit2D hitUp = Physics2D.Raycast(pos, Vector2.up, 1.5f, 1 << 2);
@@ -107,7 +124,7 @@ public class UnitController : MonoBehaviour {
             RaycastHit2D hitLeft = Physics2D.Raycast(pos, Vector2.left, 1.5f, 1 << 2);
 
             GameObject[] enemyList = GameObject.FindGameObjectsWithTag("UnitBlue");
-            Debug.Log("Objects: " + string.Join(",", enemyList.Select(o => o.ToString()).ToArray()));
+           // Debug.Log("Objects: " + string.Join(",", enemyList.Select(o => o.ToString()).ToArray()));
 
             if (hitUp.collider != null && hitUp.collider.tag == "Cell")
             {
@@ -154,7 +171,7 @@ public class UnitController : MonoBehaviour {
             RaycastHit2D hitLeft = Physics2D.Raycast(pos, Vector2.left, 1.5f, 1 << 2);
             
             GameObject[] enemyList = GameObject.FindGameObjectsWithTag("UnitRed");
-            Debug.Log("Objects: " + string.Join(",", enemyList.Select(o => o.ToString()).ToArray()));
+           // Debug.Log("Objects: " + string.Join(",", enemyList.Select(o => o.ToString()).ToArray()));
 
             if (hitRight.collider != null && hitRight.collider.tag == "Cell")
             {
@@ -198,11 +215,15 @@ public class UnitController : MonoBehaviour {
 
     void Move()
     {
-        _animator.SetBool("Active", true);
         if (!canMove)
         {
             canMove = true;
         }
+
+        if (!turnManager.playerMoved)
+            _animator.SetBool("Active", true);
+        else
+            _animator.SetBool("Active", false);
     }
 
     void Stop()
@@ -229,8 +250,8 @@ public class UnitController : MonoBehaviour {
     {
         if (enemyInRange.Count == 0 && canMove && !unitMoved && !turnManager.playerMoved)
         {
+            GetTiles();
             moving = true;
-            lastMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
             foreach (GameObject i in tilesAround)
             {
@@ -241,9 +262,8 @@ public class UnitController : MonoBehaviour {
             closestDragTile = null;
             minimumDragDistance = 100f;
         }
-        else if (enemyInRange.Count > 0 && !unitMoved && !turnManager.playerMoved)
+        else if (enemyInRange.Count > 0 && !unitMoved && !turnManager.playerMoved && canMove)
         {
-            print("click on target");
             AttackEnemy();
             turnManager.playerMoved = true;
         }
@@ -251,7 +271,7 @@ public class UnitController : MonoBehaviour {
 
     void OnMouseDrag()
     {
-        if (canMove && moving)
+        if (canMove && moving && !turnManager.playerMoved)
         {
             Vector2 mousePosision = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
             Vector2 objPosition = Camera.main.ScreenToWorldPoint(mousePosision);
@@ -264,67 +284,29 @@ public class UnitController : MonoBehaviour {
                 if (i != null && Vector2.Distance(objPosition, i.transform.position) < 1)
                 {
                     closestDragTile = i;
-                    //minimumDragDistance = Vector2.Distance(objPosition, i.transform.position);
                 }
             }
 
             transform.position = new Vector3(closestDragTile.transform.position.x, closestDragTile.transform.position.y, 0);
-
-            /*if (Vector2.Distance(lastMousePos, curMousPos) > 0.75f && !newPositionSet)
-            {
-                newPositionSet = true;
-                MoveToNewTile();
-            }
             
-            if (tilesAround[0] != null && Vector2.Distance(tilesAround[0].transform.position, curMousPos) < 0.25f && !newPositionSet) {
-
-                newPositionSet = true;
-                MoveToNewTile();
-            }
-            else if (tilesAround[1] != null && Vector2.Distance(tilesAround[1].transform.position, curMousPos) < 0.25f && !newPositionSet)
-            {
-
-                newPositionSet = true;
-                MoveToNewTile();
-            }
-            else if (tilesAround[2] != null && Vector2.Distance(tilesAround[2].transform.position, curMousPos) < 0.25f && !newPositionSet)
-            {
-
-                newPositionSet = true;
-                MoveToNewTile();
-            }*/
         }
     }
 
     void OnMouseUp()
     {
-        if (enemyInRange.Count == 0 && canMove && moving)
+        if (canMove && moving)
         {
             //moving = false;
 
             //MoveToClosestTile();
+            print("Mouse up");
             MoveToNewTile();
 
             GetTiles();
             turnManager.playerMoved = true;
+            unitMoved = true;
         }
     }
-    /*
-    void MoveToClosestTile()
-    {
-        GameObject[] tiles = GameObject.FindGameObjectsWithTag("Cell");
-        GameObject closestTile = null;
-        float minimumDistance = 100f;
-        foreach (GameObject i in tiles)
-        {
-            if (Vector2.Distance(transform.position, i.transform.position) < minimumDistance)
-            {
-                closestTile = i;
-                minimumDistance = Vector2.Distance(transform.position, i.transform.position);
-            }
-        }
-        transform.position = new Vector3(closestTile.transform.position.x, closestTile.transform.position.y, 0);
-    }*/
 
     void MoveToNewTile()
     {
@@ -364,6 +346,7 @@ public class UnitController : MonoBehaviour {
             }
 
             //move unit
+            print("MoveToNewTile");
             Instantiate(shadow, transform.position, transform.rotation);
             transform.position = new Vector3(closestTile.transform.position.x, closestTile.transform.position.y, 0);
 
@@ -384,7 +367,7 @@ public class UnitController : MonoBehaviour {
             RaycastHit2D hitUpUnit = Physics2D.Raycast(pos, Vector2.up, 1.5f, 1 << 9);
             if (hitUp.collider != null)
             {
-                if (!hitUpUnit || hitUpUnit.collider.tag == gameObject.tag)
+                if (!hitUpUnit /*|| hitUpUnit.collider.tag == gameObject.tag*/)
                 {
                     Instantiate(shadow, transform.position, transform.rotation);
                     transform.position = hitUp.collider.gameObject.transform.position;
@@ -398,7 +381,7 @@ public class UnitController : MonoBehaviour {
             RaycastHit2D hitDownUnit = Physics2D.Raycast(pos, Vector2.down, 1.5f, 1 << 9);
             if (hitDown.collider != null)
             {
-                if (!hitDownUnit || hitDownUnit.collider.tag == gameObject.tag)
+                if (!hitDownUnit /*|| hitDownUnit.collider.tag == gameObject.tag*/)
                 {
                     Instantiate(shadow, transform.position, transform.rotation);
                     transform.position = hitDown.collider.gameObject.transform.position;
@@ -410,7 +393,6 @@ public class UnitController : MonoBehaviour {
 
     void AttackEnemy()
     {
-        print("ATTACK ENEMY");
         _animator.SetTrigger("Attack");
         foreach (GameObject enemy in enemyInRange)
         {

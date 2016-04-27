@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using System.Linq;
 
+public enum UnitColor {Red, Blue};
+
 public class CardController : MonoBehaviour {
 
     public enum UnitType {Soldier, Helicopter, Tank};
@@ -18,19 +20,24 @@ public class CardController : MonoBehaviour {
     public Sprite[] unitSprites;
 
     private SpriteRenderer currentSprite;
+    [SerializeField]
+    private SpriteRenderer backgroundSprite;
     private Text costText;
     private GameObject curUnit;
 
     private TurnManager gameManager;
 
+    [SerializeField]
     private bool isActive = false;
 
     private Animator _animator;
 
     [SerializeField]
     private List<CellController> availableCells;
+    [SerializeField]
     private bool moving = false;
 
+    private float mouseUpCooldown = .2f;
     private Vector2 originalPosition;
 
     void Start()
@@ -50,7 +57,6 @@ public class CardController : MonoBehaviour {
 
     void ChooseUnit()
     {
-        availableCells = GameObject.FindGameObjectsWithTag("Cell").Select(o => o.GetComponent<CellController>()).ToList();
 
         transform.position = originalPosition;
 
@@ -92,56 +98,87 @@ public class CardController : MonoBehaviour {
 
     void Update()
     {
+        MouseUp();
+        SetActive();
+
+        if (mouseUpCooldown > 0)
+            mouseUpCooldown -= 1 * Time.deltaTime;
+    }
+
+    void SetActive()
+    {
         if (cardColor == UnitColor.Red)
         {
-            if (gameManager.gameState == GameState.MoveRed && cost <= gameManager.redMana && !gameManager.playerMoved)
+            if (cost <= gameManager.redMana)
             {
                 isActive = true;
                 _animator.SetBool("Active", true);
-
             }
             else
             {
-                if (moving)
-                {
-                    BuyUnit();
-                }
                 isActive = false;
                 _animator.SetBool("Active", false);
+                backgroundSprite.color = Color.black;
+            }
+
+            if (gameManager.selectedCardRed == this)
+            {
+                moving = true;
+                backgroundSprite.color = Color.green;
+            }
+            else
+            {
+                moving = false;
+                backgroundSprite.color = Color.black;
             }
         }
 
         if (cardColor == UnitColor.Blue)
         {
-            if (gameManager.gameState == GameState.MoveBlue && cost <= gameManager.blueMana && !gameManager.playerMoved)
+            if (cost <= gameManager.blueMana)
             {
                 isActive = true;
                 _animator.SetBool("Active", true);
-
             }
             else
             {
-                if (moving)
-                {
-                    BuyUnit();
-                }
                 isActive = false;
                 _animator.SetBool("Active", false);
+                backgroundSprite.color = Color.black;
+            }
+
+            if (gameManager.selectedCardBlue == this)
+            {
+                moving = true;
+                backgroundSprite.color = Color.green;
+            }
+            else
+            {
+                moving = false;
+                backgroundSprite.color = Color.black;
             }
         }
     }
     
     void OnMouseDown()
     {
-        if (isActive)
+        if (isActive && !moving)
         {
-            //spend mana
+            availableCells = GameObject.FindGameObjectsWithTag("Cell").Select(o => o.GetComponent<CellController>()).ToList();
+            moving = true;
+
+            mouseUpCooldown = 0.1f;
+
+            if (cardColor == UnitColor.Red)
+                gameManager.selectedCardRed = this;
+            else
+                gameManager.selectedCardBlue = this;
+            
             if (cardColor == UnitColor.Red)
             {
-                
                 for (int i = availableCells.Count - 1; i >= 0; i--)
                 {
-                    if (availableCells[i].transform.position.y > -2)
+                    if (availableCells[i].transform.position.y > .5f)
                         availableCells.Remove(availableCells[i]);
                 }
             }
@@ -150,7 +187,7 @@ public class CardController : MonoBehaviour {
 
                 for (int i = availableCells.Count - 1; i >= 0; i--)
                 {
-                    if (availableCells[i].transform.position.y < 4.5f)
+                    if (availableCells[i].transform.position.y < 2f)
                         availableCells.Remove(availableCells[i]);
                 }
             }
@@ -159,73 +196,125 @@ public class CardController : MonoBehaviour {
             {
                 GameObject[] allies;
                 if (cardColor == UnitColor.Red)
-                {
                     allies = GameObject.FindGameObjectsWithTag("UnitRed");
-                }
                 else
-                {
                     allies = GameObject.FindGameObjectsWithTag("UnitBlue");
-                }
+
                 foreach (GameObject ally in allies)
                 {
                     if (Vector2.Distance(availableCells[i].gameObject.transform.position, ally.transform.position) < 0.5f)
                     {
-                        availableCells.Remove(availableCells[i]);
+                        availableCells[i].ReturnColor();
+                        availableCells.RemoveAt(i);
+                        break;
                     }
+                        
                 }
-                if (availableCells[i] != null)
-                    availableCells[i].ShowColor();
-
-                moving = true;
+                /* if (availableCells.Count == i)
+                    availableCells[i].ShowColor(); */
             }
-        }
-    }
-
-    void OnMouseDrag()
-    {
-        if (isActive)
-        {
-            Vector2 mousePosision = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
-            Vector2 objPosition = Camera.main.ScreenToWorldPoint(mousePosision);
-
-            float minimumDistance = 2;
             foreach (CellController cell in availableCells)
             {
-                float curCellDistance = Vector2.Distance(objPosition, cell.gameObject.transform.position);
-                if (curCellDistance < minimumDistance)
+                cell.ShowColor();
+            }
+        }
+        //if moving
+        else if (isActive && moving)
+        {
+            moving = false;
+            if (cardColor == UnitColor.Red)
+                gameManager.selectedCardRed = null;
+            else
+                gameManager.selectedCardBlue = null;
+
+            backgroundSprite.color = Color.black;
+            foreach (CellController cell in availableCells)
+            {
+                cell.ReturnColor();
+            }
+        }
+    }
+    
+    void MouseUp()
+    {
+        if (Input.GetMouseButtonUp(0) && moving && isActive && mouseUpCooldown <= 0)
+        {
+            Vector3 mousePos = Input.mousePosition;
+            mousePos.z = 10f;
+            mousePos = Camera.main.ScreenToWorldPoint(mousePos);
+            
+            GameObject closestCell = null;
+            foreach (CellController cell in availableCells)
+            {
+
+                if (Vector2.Distance(mousePos, cell.gameObject.transform.position) < 0.5)
+                    closestCell = cell.gameObject;
+            }
+
+            if (closestCell != null)
+                BuyUnit(closestCell.transform.position);
+            else
+            {
+                GameObject closestAllie = null;
+                GameObject[] alliesCards;
+
+                if (cardColor == UnitColor.Red)
+                    alliesCards = GameObject.FindGameObjectsWithTag("UnitRed");
+                else
+                    alliesCards = GameObject.FindGameObjectsWithTag("UnitBlue");
+
+                if (Vector2.Distance(mousePos, gameObject.transform.position) > 0.5)
                 {
-                    transform.position = cell.gameObject.transform.position;
-                    minimumDistance = curCellDistance;
+                    foreach (GameObject card in alliesCards)
+                    {
+                        if (Vector2.Distance(mousePos, card.transform.position) < 0.5)
+                        {
+                            closestAllie = card;
+                        }
+                    }
                 }
+              /*  if (closestAllie == null)
+                {
+                    moving = false;
+                    if (cardColor == UnitColor.Red)
+                        gameManager.selectedCardRed = null;
+                    else
+                        gameManager.selectedCardBlue = null;
+
+                    backgroundSprite.color = Color.black;
+                    foreach (CellController cell in availableCells)
+                    {
+                        cell.ReturnColor();
+                    }
+                } */
             }
         }
     }
 
-    void OnMouseUp()
+    void BuyUnit(Vector2 spawnPosition)
     {
-        if (moving && isActive)
-        {
-            BuyUnit();
-        }
-    }
+        print("buy unit");
 
-    void BuyUnit()
-    {
         if (cardColor == UnitColor.Blue)
+        {
             gameManager.blueMana -= cost;
+            gameManager.selectedCardBlue = null;
+        }
         else
+        {
             gameManager.redMana -= cost;
-
+            gameManager.selectedCardRed = null;
+        }
+        
         moving = false;
-        isActive = false;
-        gameManager.playerMoved = true;
+        backgroundSprite.color = Color.black;
 
         foreach (CellController cell in availableCells)
         {
             cell.ReturnColor();
         }
 
-        Instantiate(curUnit, transform.position, Quaternion.Euler(0,0,0));
+        Instantiate(curUnit, spawnPosition, Quaternion.Euler(0,0,0));
 
         ChooseUnit();
     }

@@ -63,18 +63,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\AttackRange.cs" />
-    <Compile Include="Assets\Scripts\AttackTargetController.cs" />
+    <Compile Include="Assets\Scripts\BaseHealth.cs" />
     <Compile Include="Assets\Scripts\CardController.cs" />
     <Compile Include="Assets\Scripts\CellController.cs" />
-    <Compile Include="Assets\Scripts\DestroyOnTime.cs" />
-    <Compile Include="Assets\Scripts\GoToGame.cs" />
-    <Compile Include="Assets\Scripts\HeartsController.cs" />
     <Compile Include="Assets\Scripts\ManaFeedbackController.cs" />
-    <Compile Include="Assets\Scripts\ShadowController.cs" />
     <Compile Include="Assets\Scripts\TurnManager.cs" />
     <Compile Include="Assets\Scripts\UnitController.cs" />
-    <Compile Include="Assets\Scripts\UnitHealth.cs" />
+    <Compile Include="Assets\WeaponController.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>

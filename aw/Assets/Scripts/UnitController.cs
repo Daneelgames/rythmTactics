@@ -3,409 +3,119 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public enum UnitColor { Red, Blue };
-
 public class UnitController : MonoBehaviour {
 
-    public UnitColor unitColor = UnitColor.Blue;
-    public int damage = 1;
-
-    public bool unitMoved = false;
-
-    public List<GameObject> enemyInRange;
-    
-    private TurnManager turnManager;
-    private Animator _animator;
-
-
     [SerializeField]
-    private bool canMove = false;
-    [SerializeField]
-    private bool moving = false;
+    private UnitColor cardColor = UnitColor.Red;
+    private enum UnitState {Aim, Battle};
 
-    [HideInInspector]
-    public Vector2 pos;
+    public int health = 1;
+    public float attackTime = 1;
+    public int attackDmg = 1;
 
-    [SerializeField]
-    private GameObject[] tilesAround;
+    public GameObject weapon;
 
-    
-    [SerializeField]
-    private Vector2 curMousPos;
-
-    private bool newPositionSet = false;
-    
-    public GameObject shadow;
-
-    GameObject closestDragTile = null;
-    float minimumDragDistance = 100f;
-   
     /*
-    private bool _flag = false;
-    private bool flag
-    {
-        get
-        {
-            return _flag;
-        }
-        set
-        {
-            _flag = value;
+    public float rangeAngle = 15;
+    public float rangeLength = 1;
+    */
 
-        }
-    }*/
+    private Vector2 shootDirection;
 
-    void Start()
-    {
-        enemyInRange = new List<GameObject>();
-        turnManager = GameObject.Find("BattleManager").GetComponent<TurnManager>();
-        _animator = GetComponentInChildren<Animator>();
-
-        GetTiles();
-    }
+    private float rangeCooldown = 0.1f;
+    private UnitState state = UnitState.Battle;
     
+    [SerializeField]
+    private GameObject range;
+    private Collider2D rangeCollider;
+    [SerializeField]
+    private List<GameObject> enemiesInRange;
+
+    void Start () {
+        if (cardColor == UnitColor.Red)
+            range.transform.rotation = Quaternion.Euler(new Vector3(0, 0, 90));
+        else
+            range.transform.rotation = Quaternion.Euler(new Vector3(0, 0, 270));
+
+        rangeCollider = range.GetComponent<Collider2D>();
+
+        InvokeRepeating("Shoot", attackTime, attackTime);
+    }
+
     void Update()
     {
-        if (unitColor == UnitColor.Red)
+        if (rangeCooldown > 0)
+            rangeCooldown -= 1 * Time.deltaTime;
+
+        if (Input.GetMouseButton(0) && state == UnitState.Aim && rangeCooldown <= 0)
         {
-            if (turnManager.gameState == GameState.MoveRed)
-                Move();
-            else
-                Stop();
-
-            if (transform.position.y > 4)
-                Score("RedScore");
+            SetRangeAngle();
         }
-        else if (unitColor == UnitColor.Blue)
+
+        if (Input.GetMouseButtonUp(0) && state == UnitState.Aim && rangeCooldown <= 0)
         {
-            if (turnManager.gameState == GameState.MoveBlue)
-                Move();
-            else
-                Stop();
-
-            if (transform.position.y < -2)
-                Score("BlueScore");
-
+            state = UnitState.Battle;
         }
-        ClearEnemies();
-    }
 
-    void Score(string color)
-    {
-        GetComponent<UnitHealth>().Damage(999);
-        if (color == "RedScore")
-            turnManager.blueLives -= 1;
-        else
-            turnManager.redLives -= 1;
-    }
-
-    void GetTiles()
-    {
-        pos = transform.position;
-        foreach (GameObject i in tilesAround)
+        if (state == UnitState.Battle)
         {
-            if (i != null)
-                i.GetComponent<CellController>().ReturnColor();
-        }
-
-        for (int i = 0; i < 4; i++)
-        {
-            if (tilesAround[i] != null)
-                tilesAround[i] = null;
+            Battle();
         }
 
 
-        print("GetTiles");
-
-        if (unitColor == UnitColor.Red)
-        { //ЗДЕСЬ НАДО УБИРАТЬ ДОСТУПНЫЕ ТАЙЛЫ ДЛЯ ДВИЖЕНИЯ ЕЖЕЛИ НА НИХ СТОИТ ВРАГ
-            RaycastHit2D hitUp = Physics2D.Raycast(pos, Vector2.up, 1.5f, 1 << 2);
-            RaycastHit2D hitRight = Physics2D.Raycast(pos, Vector2.right, 1.5f, 1 << 2);
-            RaycastHit2D hitLeft = Physics2D.Raycast(pos, Vector2.left, 1.5f, 1 << 2);
-
-            GameObject[] enemyList = GameObject.FindGameObjectsWithTag("UnitBlue");
-           // Debug.Log("Objects: " + string.Join(",", enemyList.Select(o => o.ToString()).ToArray()));
-
-            if (hitUp.collider != null && hitUp.collider.tag == "Cell")
-            {
-                foreach (GameObject j in enemyList)
-                {
-                    if (Vector2.Distance(hitUp.collider.gameObject.transform.position, j.transform.position) > 1)
-                    {
-                        tilesAround[0] = hitUp.collider.gameObject;
-                    }
-                }
-            }
-            if (hitRight.collider != null && hitRight.collider.tag == "Cell")
-            {
-                foreach (GameObject j in enemyList)
-                {
-                    if (Vector2.Distance(hitRight.collider.gameObject.transform.position, j.transform.position) > 1)
-                    {
-                        tilesAround[1] = hitRight.collider.gameObject;
-                    }
-                }
-            }
-            if (hitLeft.collider != null && hitLeft.collider.tag == "Cell")
-            {
-                foreach (GameObject j in enemyList)
-                {
-                    if (Vector2.Distance(hitLeft.collider.gameObject.transform.position, j.transform.position) > 1)
-                    {
-                        tilesAround[2] = hitLeft.collider.gameObject;
-                    }
-                }
-            }
-
-            GameObject[] tiles = GameObject.FindGameObjectsWithTag("Cell");
-            foreach (GameObject i in tiles)
-            {
-                if (Vector2.Distance(transform.position, i.transform.position) < 0.1f)
-                    tilesAround[3] = i;
-            }
-        }
-        else
-        {
-            RaycastHit2D hitRight = Physics2D.Raycast(pos, Vector2.right, 1.5f, 1 << 2);
-            RaycastHit2D hitDown = Physics2D.Raycast(pos, Vector2.down, 1.5f, 1 << 2);
-            RaycastHit2D hitLeft = Physics2D.Raycast(pos, Vector2.left, 1.5f, 1 << 2);
-            
-            GameObject[] enemyList = GameObject.FindGameObjectsWithTag("UnitRed");
-           // Debug.Log("Objects: " + string.Join(",", enemyList.Select(o => o.ToString()).ToArray()));
-
-            if (hitRight.collider != null && hitRight.collider.tag == "Cell")
-            {
-                foreach (GameObject j in enemyList)
-                {
-                    if (Vector2.Distance(hitRight.collider.gameObject.transform.position, j.transform.position) > 1)
-                    {
-                        tilesAround[0] = hitRight.collider.gameObject;
-                    }
-                }
-            }
-            if (hitDown.collider != null && hitDown.collider.tag == "Cell")
-            {
-                foreach (GameObject j in enemyList)
-                {
-                    if (Vector2.Distance(hitDown.collider.gameObject.transform.position, j.transform.position) > 1)
-                    {
-                        tilesAround[1] = hitDown.collider.gameObject;
-                    }
-                }
-            }
-            if (hitLeft.collider != null && hitLeft.collider.tag == "Cell")
-            {
-                foreach (GameObject j in enemyList)
-                {
-                    if (Vector2.Distance(hitLeft.collider.gameObject.transform.position, j.transform.position) > 1)
-                    {
-                        tilesAround[2] = hitLeft.collider.gameObject;
-                    }
-                }
-            }
-            GameObject[] tiles = GameObject.FindGameObjectsWithTag("Cell");
-            foreach (GameObject i in tiles)
-            {
-                if (Vector2.Distance(transform.position, i.transform.position) < 0.1f)
-                    tilesAround[3] = i;
-            }
-        }
-        
-    }
-
-    void Move()
-    {
-        if (!canMove)
-        {
-            canMove = true;
-        }
-
-        if (!turnManager.playerMoved)
-            _animator.SetBool("Active", true);
-        else
-            _animator.SetBool("Active", false);
-    }
-
-    void Stop()
-    {
-        _animator.SetBool("Active", false);
-        if (canMove)
-        {
-            canMove = false;
-            newPositionSet = false;
-            //MoveToClosestTile();
-            //MoveToNewTile();
-
-           if (enemyInRange.Count(e => e != null) == 0)
-                MoveForward();
-            else if (enemyInRange.Count > 0)
-                AttackEnemy();
-
-            GetTiles();
-
-        }
     }
 
     void OnMouseDown()
     {
-        if (enemyInRange.Count == 0 && canMove && !unitMoved && !turnManager.playerMoved)
-        {
-            GetTiles();
-            moving = true;
-
-            foreach (GameObject i in tilesAround)
-            {
-                if (i != null)
-                    i.GetComponent<CellController>().ShowColor();
-            }
-
-            closestDragTile = null;
-            minimumDragDistance = 100f;
-        }
-        else if (enemyInRange.Count > 0 && !unitMoved && !turnManager.playerMoved && canMove)
-        {
-            AttackEnemy();
-            turnManager.playerMoved = true;
-        }
+        state = UnitState.Aim;
     }
 
-    void OnMouseDrag()
+    void SetRangeAngle()
     {
-        if (canMove && moving && !turnManager.playerMoved)
-        {
-            Vector2 mousePosision = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
-            Vector2 objPosition = Camera.main.ScreenToWorldPoint(mousePosision);
+        if (!range.GetComponent<SpriteRenderer>().enabled)
+            range.GetComponent<SpriteRenderer>().enabled = true;
 
-            curMousPos = objPosition;
-
-
-            foreach (GameObject i in tilesAround)
-            {
-                if (i != null && Vector2.Distance(objPosition, i.transform.position) < 1)
-                {
-                    closestDragTile = i;
-                }
-            }
-
-            transform.position = new Vector3(closestDragTile.transform.position.x, closestDragTile.transform.position.y, 0);
-            
-        }
+        Vector2 mousePos = Input.mousePosition;
+        mousePos = new Vector3(mousePos.x, mousePos.y, 10f);
+        mousePos = Camera.main.ScreenToWorldPoint(mousePos);
+        range.transform.rotation = Quaternion.Euler(new Vector3(0,0, Mathf.Atan2((mousePos.y - range.transform.position.y), (mousePos.x - range.transform.position.x)) * Mathf.Rad2Deg));
     }
 
-    void OnMouseUp()
+    void Battle()
     {
-        if (canMove && moving)
-        {
-            //moving = false;
+        if (range.GetComponent<SpriteRenderer>().enabled)
+            range.GetComponent<SpriteRenderer>().enabled = false;
 
-            //MoveToClosestTile();
-            print("Mouse up");
-            MoveToNewTile();
-
-            GetTiles();
-            turnManager.playerMoved = true;
-            unitMoved = true;
-        }
     }
 
-    void MoveToNewTile()
+
+    
+    void Shoot()
     {
-        if (moving)
+        GameObject[] enemies;
+        if (cardColor == UnitColor.Red)
+             enemies = GameObject.FindGameObjectsWithTag("UnitBlue");
+        else
+            enemies = GameObject.FindGameObjectsWithTag("UnitRed");
+
+        enemiesInRange = enemies.Where(e => e.GetComponent<Collider2D>().IsTouching(rangeCollider)).ToList();
+
+        float maximumDistance = 10f;
+        GameObject target = null;
+
+        foreach (GameObject enemy in enemiesInRange)
         {
-            moving = false;
-            GameObject closestTile = null;
-            float minimumDistance = 100f;
-
-            foreach (GameObject i in tilesAround)
+            if (Vector2.Distance(gameObject.transform.position, enemy.transform.position) < maximumDistance)
             {
-                if (i != null && Vector2.Distance(transform.position, i.transform.position) < minimumDistance)
-                {
-                            closestTile = i;
-                            minimumDistance = Vector2.Distance(transform.position, i.transform.position);
-                }
-            }
-
-            //move other unit
-            GameObject[] units = GameObject.FindGameObjectsWithTag(gameObject.tag);
-            GameObject closestUnit = null;
-            float distance = 0.5f;
-            foreach (GameObject i in units)
-            {
-                if (i != gameObject && Vector2.Distance(transform.position, i.transform.position) < distance)
-                {
-                    closestUnit = i;
-                    distance = Vector2.Distance(transform.position, i.transform.position);
-                }
-            }
-            if (closestUnit != null)
-            {
-                GameObject anotherShadow = closestUnit.GetComponent<UnitController>().shadow;
-                Instantiate(anotherShadow, closestUnit.gameObject.transform.position, closestUnit.gameObject.transform.rotation);
-                closestUnit.transform.position = pos;
-                closestUnit.GetComponent<UnitController>().pos = closestUnit.transform.position;
-            }
-
-            //move unit
-            print("MoveToNewTile");
-            Instantiate(shadow, transform.position, transform.rotation);
-            transform.position = new Vector3(closestTile.transform.position.x, closestTile.transform.position.y, 0);
-
-
-            canMove = false;
-            newPositionSet = false;
-            //MoveToClosestTile();
-            GetTiles();
-            unitMoved = true;
-        }
-    }
-
-    void MoveForward()
-    {
-        if (unitColor == UnitColor.Red)
-        {
-            RaycastHit2D hitUp = Physics2D.Raycast(pos, Vector2.up, 1.5f, 1 << 2);
-            RaycastHit2D hitUpUnit = Physics2D.Raycast(pos, Vector2.up, 1.5f, 1 << 9);
-            if (hitUp.collider != null)
-            {
-                if (!hitUpUnit /*|| hitUpUnit.collider.tag == gameObject.tag*/)
-                {
-                    Instantiate(shadow, transform.position, transform.rotation);
-                    transform.position = hitUp.collider.gameObject.transform.position;
-                    _animator.SetTrigger("MoveForward");
-                }
+                maximumDistance = Vector2.Distance(gameObject.transform.position, enemy.transform.position);
+                target = enemy;
             }
         }
-        else if (unitColor == UnitColor.Blue)
-        {
-            RaycastHit2D hitDown = Physics2D.Raycast(pos, Vector2.down, 1.5f, 1 << 2);
-            RaycastHit2D hitDownUnit = Physics2D.Raycast(pos, Vector2.down, 1.5f, 1 << 9);
-            if (hitDown.collider != null)
-            {
-                if (!hitDownUnit /*|| hitDownUnit.collider.tag == gameObject.tag*/)
-                {
-                    Instantiate(shadow, transform.position, transform.rotation);
-                    transform.position = hitDown.collider.gameObject.transform.position;
-                    _animator.SetTrigger("MoveForward");
-                }
-            }
-        }
-    }
 
-    void AttackEnemy()
-    {
-        _animator.SetTrigger("Attack");
-        foreach (GameObject enemy in enemyInRange)
+        if (target != null)
         {
-            enemy.GetComponent<UnitHealth>().Damage(damage);
-        }
-    }
-
-    void ClearEnemies()
-    {
-        for (int i = enemyInRange.Count - 1; i >= 0; i--)
-        {
-            if (enemyInRange[i] == null)
-                enemyInRange.RemoveAt(i);
+            GameObject projectile = Instantiate(weapon, transform.position, transform.rotation) as GameObject;
+            projectile.GetComponent<WeaponController>().targetPosition = target.transform.position;
         }
     }
 }

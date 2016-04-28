@@ -110,6 +110,14 @@ public class CardController : MonoBehaviour {
 
         if (mouseUpCooldown > 0)
             mouseUpCooldown -= 1 * Time.deltaTime;
+
+        Vector2 mousePos = Input.mousePosition;
+        mousePos = new Vector3(mousePos.x, mousePos.y, 10f);
+        mousePos = Camera.main.ScreenToWorldPoint(mousePos);
+
+        if (Vector2.Distance(transform.position, mousePos) < 1.5 && Input.GetMouseButtonDown(0))
+            MouseDown();
+
     }
 
     void SetActive()
@@ -167,7 +175,7 @@ public class CardController : MonoBehaviour {
         }
     }
     
-    void OnMouseDown()
+    void MouseDown()
     {
         if (isActive && !moving)
         {

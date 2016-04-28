@@ -64,9 +64,17 @@ public class UnitController : MonoBehaviour {
         {
             Battle();
         }
+
+
+        Vector2 mousePos = Input.mousePosition;
+        mousePos = new Vector3(mousePos.x, mousePos.y, 10f);
+        mousePos = Camera.main.ScreenToWorldPoint(mousePos);
+
+        if (Vector2.Distance(transform.position, mousePos) < 1.5 && Input.GetMouseButtonDown(0))
+            MouseDown();
     }
 
-    void OnMouseDown()
+    void MouseDown()
     {
         if (weapon != null)
             state = UnitState.Aim;
@@ -80,7 +88,12 @@ public class UnitController : MonoBehaviour {
         Vector2 mousePos = Input.mousePosition;
         mousePos = new Vector3(mousePos.x, mousePos.y, 10f);
         mousePos = Camera.main.ScreenToWorldPoint(mousePos);
-        range.transform.rotation = Quaternion.Euler(new Vector3(0,0, Mathf.Atan2((mousePos.y - range.transform.position.y), (mousePos.x - range.transform.position.x)) * Mathf.Rad2Deg));
+        if (mousePos.y < 1.25f && cardColor == UnitColor.Blue)
+            mousePos = new Vector3(mousePos.x, 1.25f, 10f);
+        if (mousePos.y > 1.25f && cardColor == UnitColor.Red)
+            mousePos = new Vector3(mousePos.x, 1.25f, 10f);
+
+        range.transform.rotation = Quaternion.Euler(new Vector3(0,0, Mathf.Atan2((range.transform.position.y - mousePos.y), (range.transform.position.x - mousePos.x)) * Mathf.Rad2Deg));
     }
 
     void Battle()

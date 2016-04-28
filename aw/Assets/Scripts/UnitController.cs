@@ -11,6 +11,8 @@ public class UnitController : MonoBehaviour {
     public float attackTime = 1;
     public int attackDmg = 1;
 
+    private Animator _animator;
+
     public GameObject weapon;
 
     /*
@@ -37,7 +39,8 @@ public class UnitController : MonoBehaviour {
             range.transform.rotation = Quaternion.Euler(new Vector3(0, 0, Mathf.Atan2((-2.5f - range.transform.position.y), (0 - range.transform.position.x)) * Mathf.Rad2Deg));
 
         rangeCollider = range.GetComponent<Collider2D>();
-
+        _animator = GetComponentInChildren<Animator>();
+            
         if (weapon != null)
             InvokeRepeating("Shoot", attackTime, attackTime);
     }
@@ -110,6 +113,7 @@ public class UnitController : MonoBehaviour {
 
         if (target != null)
         {
+            _animator.SetTrigger("Attack");
             GameObject projectile = Instantiate(weapon, transform.position, transform.rotation) as GameObject;
             WeaponController bulletController = projectile.GetComponent<WeaponController>();
             bulletController.targetPosition = target.transform.position;

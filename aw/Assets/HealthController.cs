@@ -17,6 +17,8 @@ public class HealthController : MonoBehaviour {
 
     private int minHealth = 0;
 
+    private Animator _animator;
+
     private float minFill = 0f;
     private float maxFill = 1f;
     
@@ -27,6 +29,7 @@ public class HealthController : MonoBehaviour {
 
     void Start()
     {
+        _animator = GetComponentInChildren<Animator>();
         curHealth = maxHealth;
     }
 
@@ -49,7 +52,12 @@ public class HealthController : MonoBehaviour {
     public void Damage(int damage)
     {
             if (curHealth > damage)
-                curHealth -= damage;
+        {
+            curHealth -= damage;
+
+            if (_animator != null)
+                _animator.SetTrigger("Damage");
+        }
             else
                 DestroyUnit();
     }

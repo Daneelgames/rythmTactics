@@ -115,7 +115,7 @@ public class CardController : MonoBehaviour {
             mouseUpCooldown -= 1 * Time.deltaTime;
 
 
-        if (Input.touchCount > 0)
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
         {
             touchPos_1 = Input.GetTouch(0).position;
             touchPos_1 = Camera.main.ScreenToWorldPoint(touchPos_1);
@@ -125,7 +125,7 @@ public class CardController : MonoBehaviour {
                 MouseDown();
             }
         }
-        if (Input.touchCount > 1)
+        if (Input.touchCount > 1 && Input.GetTouch(1).phase == TouchPhase.Began)
         {
             touchPos_2 = Input.GetTouch(1).position;
             touchPos_2 = Camera.main.ScreenToWorldPoint(touchPos_2);

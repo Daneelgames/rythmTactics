@@ -40,6 +40,9 @@ public class CardController : MonoBehaviour {
     private float mouseUpCooldown = .2f;
     private Vector2 originalPosition;
 
+    Vector2 touchPos_1;
+    Vector2 touchPos_2;
+
     void Start()
     {
         _animator = GetComponentInChildren<Animator>();
@@ -111,13 +114,35 @@ public class CardController : MonoBehaviour {
         if (mouseUpCooldown > 0)
             mouseUpCooldown -= 1 * Time.deltaTime;
 
+
+        if (Input.touchCount > 0)
+        {
+            touchPos_1 = Input.GetTouch(0).position;
+            touchPos_1 = Camera.main.ScreenToWorldPoint(touchPos_1);
+
+            if (Vector2.Distance(transform.position, (Vector3)touchPos_1) < 1.3)
+            {
+                MouseDown();
+            }
+        }
+        if (Input.touchCount > 1)
+        {
+            touchPos_2 = Input.GetTouch(1).position;
+            touchPos_2 = Camera.main.ScreenToWorldPoint(touchPos_2);
+
+            if (Vector2.Distance(transform.position, (Vector3)touchPos_2) < 1.3)
+            {
+                MouseDown();
+            }
+        }
+        /*
         Vector2 mousePos = Input.mousePosition;
         mousePos = new Vector3(mousePos.x, mousePos.y, 10f);
         mousePos = Camera.main.ScreenToWorldPoint(mousePos);
 
         if (Vector2.Distance(transform.position, mousePos) < 1.5 && Input.GetMouseButtonDown(0))
             MouseDown();
-
+        */
     }
 
     void SetActive()

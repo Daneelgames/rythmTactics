@@ -20,6 +20,11 @@ public class TurnManager : MonoBehaviour {
     public CardController selectedCardBlue;
     public CardController selectedCardRed;
 
+    [SerializeField]
+    private GameObject redBase;
+    [SerializeField]
+    private GameObject blueBase;
+
     void Start()
     {
         timeCur = timeMax;
@@ -38,5 +43,10 @@ public class TurnManager : MonoBehaviour {
 
             timeCur = timeMax;
         }
+
+        if (redBase == null)
+            SceneManager.LoadScene(3);
+        else if (blueBase == null)
+            SceneManager.LoadScene(2);
     }
 }

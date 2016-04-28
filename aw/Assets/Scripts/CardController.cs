@@ -8,7 +8,7 @@ public enum UnitColor {Red, Blue};
 
 public class CardController : MonoBehaviour {
 
-    public enum UnitType {Soldier, Helicopter, Tank};
+    public enum UnitType {Soldier, Helicopter, Tank, Wall};
     [SerializeField]
     private UnitType card = UnitType.Soldier;
     
@@ -60,7 +60,7 @@ public class CardController : MonoBehaviour {
 
         transform.position = originalPosition;
 
-        int random = Random.Range(0, 3);
+        int random = Random.Range(0, 4);
 
         switch (random)
         {
@@ -83,6 +83,13 @@ public class CardController : MonoBehaviour {
                 currentSprite.sprite = unitSprites[2];
                 cost = 3;
                 curUnit = units[2];
+                break;
+
+            case 3:
+                card = UnitType.Wall ;
+                currentSprite.sprite = unitSprites[3];
+                cost = 3;
+                curUnit = units[3];
                 break;
 
             default:

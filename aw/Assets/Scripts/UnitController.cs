@@ -4,12 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 
 public class UnitController : MonoBehaviour {
-
-    [SerializeField]
-    private UnitColor cardColor = UnitColor.Red;
+    
+    public UnitColor cardColor = UnitColor.Red;
     private enum UnitState {Aim, Battle};
-
-    public int health = 1;
+    
     public float attackTime = 1;
     public int attackDmg = 1;
 
@@ -22,6 +20,7 @@ public class UnitController : MonoBehaviour {
 
     private Vector2 shootDirection;
 
+
     private float rangeCooldown = 0.1f;
     private UnitState state = UnitState.Battle;
     
@@ -33,13 +32,14 @@ public class UnitController : MonoBehaviour {
 
     void Start () {
         if (cardColor == UnitColor.Red)
-            range.transform.rotation = Quaternion.Euler(new Vector3(0, 0, 90));
+            range.transform.rotation = Quaternion.Euler(new Vector3(0, 0, Mathf.Atan2((5 - range.transform.position.y), (0 - range.transform.position.x)) * Mathf.Rad2Deg));
         else
-            range.transform.rotation = Quaternion.Euler(new Vector3(0, 0, 270));
+            range.transform.rotation = Quaternion.Euler(new Vector3(0, 0, Mathf.Atan2((-2.5f - range.transform.position.y), (0 - range.transform.position.x)) * Mathf.Rad2Deg));
 
         rangeCollider = range.GetComponent<Collider2D>();
 
-        InvokeRepeating("Shoot", attackTime, attackTime);
+        if (weapon != null)
+            InvokeRepeating("Shoot", attackTime, attackTime);
     }
 
     void Update()
@@ -61,13 +61,12 @@ public class UnitController : MonoBehaviour {
         {
             Battle();
         }
-
-
     }
 
     void OnMouseDown()
     {
-        state = UnitState.Aim;
+        if (weapon != null)
+            state = UnitState.Aim;
     }
 
     void SetRangeAngle()
@@ -85,10 +84,7 @@ public class UnitController : MonoBehaviour {
     {
         if (range.GetComponent<SpriteRenderer>().enabled)
             range.GetComponent<SpriteRenderer>().enabled = false;
-
     }
-
-
     
     void Shoot()
     {
@@ -98,7 +94,7 @@ public class UnitController : MonoBehaviour {
         else
             enemies = GameObject.FindGameObjectsWithTag("UnitRed");
 
-        enemiesInRange = enemies.Where(e => e.GetComponent<Collider2D>().IsTouching(rangeCollider)).ToList();
+        enemiesInRange = enemies.Where(e => e.GetComponent<CircleCollider2D>().IsTouching(rangeCollider)).ToList();
 
         float maximumDistance = 10f;
         GameObject target = null;
@@ -115,7 +111,10 @@ public class UnitController : MonoBehaviour {
         if (target != null)
         {
             GameObject projectile = Instantiate(weapon, transform.position, transform.rotation) as GameObject;
-            projectile.GetComponent<WeaponController>().targetPosition = target.transform.position;
+            WeaponController bulletController = projectile.GetComponent<WeaponController>();
+            bulletController.targetPosition = target.transform.position;
+            bulletController.damage = attackDmg;
+            bulletController.bulletColor = cardColor;
         }
     }
 }

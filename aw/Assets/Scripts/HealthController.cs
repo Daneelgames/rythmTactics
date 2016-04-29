@@ -5,25 +5,41 @@ using UnityEngine.UI;
 public class HealthController : MonoBehaviour {
 
     public UnitColor unitColor = UnitColor.Red;
-    
+
+    [SerializeField]
+    private float timeToSuddenDeath = 5;
+
     [SerializeField]
     private GameObject explosion;
     
     private Image content;
 
-    public int maxHealth = 10;
+    public float maxHealth = 10;
     [HideInInspector]
-    public int curHealth = 10;
+    public float curHealth = 10;
 
-    private int minHealth = 0;
+    private float minHealth = 0;
 
     private Animator _animator;
 
     private float minFill = 0f;
     private float maxFill = 1f;
-    
+
+    private bool dying = false;
+
+    private TurnManager gameManager;
+
+    [SerializeField]
+    private bool isBase = false;
+
     void Awake()
     {
+        gameManager = GameObject.Find("BattleManager").GetComponent<TurnManager>();
+        if (unitColor == UnitColor.Red)
+            gameManager.redUnits += 1;
+        else
+            gameManager.blueUnits += 1;
+
         content = transform.Find("Canvas/HealthBack/Health").GetComponent<Image>();
     }
 
@@ -37,6 +53,19 @@ public class HealthController : MonoBehaviour {
     void Update()
     {
         HandleBar();
+
+        if (timeToSuddenDeath > 0)
+            timeToSuddenDeath -= 1 * Time.deltaTime;
+        else
+            dying = true;
+
+        if (dying && unitColor == UnitColor.Red)
+            curHealth -= 1 * Time.deltaTime + gameManager.redUnits / 10;
+        else if (dying && unitColor == UnitColor.Blue)
+            curHealth -= 1 * Time.deltaTime + gameManager.blueUnits / 10;
+
+        if (curHealth <= 0)
+                DestroyUnit();
     }
 
     private void HandleBar()
@@ -44,7 +73,7 @@ public class HealthController : MonoBehaviour {
         content.fillAmount = Map(curHealth, minHealth, maxHealth, minFill, maxFill);
     }
 
-    private float Map(int curHealth, int inMin, int inMax, float outMin, float outMax)
+    private float Map(float curHealth, float inMin, float inMax, float outMin, float outMax)
     {
         return (curHealth * 1.0f - inMin) * (outMax - outMin) / (inMax * 1.0f - inMin * 1.0f) + outMin;
     }
@@ -65,6 +94,12 @@ public class HealthController : MonoBehaviour {
     public void DestroyUnit()
     {
         Instantiate(explosion, transform.position, transform.rotation);
+        
+        if (unitColor == UnitColor.Red)
+            gameManager.redUnits -= 1;
+        else
+            gameManager.blueUnits -= 1;
+
         Destroy(gameObject);
     }
 }

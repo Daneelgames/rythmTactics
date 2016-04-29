@@ -31,7 +31,10 @@ public class TurnManager : MonoBehaviour {
     private GameObject redBase;
     [SerializeField]
     private GameObject blueBase;
-    
+
+    public int redUnits;
+    public int blueUnits;
+
     void Awake(){
         if (_instance == null){
             _instance = this;
@@ -51,9 +54,9 @@ public class TurnManager : MonoBehaviour {
             timeCur -= 1 * Time.deltaTime;
         else
         {
-            if (redMana < 5)
+            if (redMana < 10)
                 redMana += 1;
-            if (blueMana < 5)
+            if (blueMana < 10)
                 blueMana += 1;
 
             timeCur = timeMax;

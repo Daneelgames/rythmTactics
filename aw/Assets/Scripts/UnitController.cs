@@ -27,7 +27,9 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
 
     private float rangeCooldown = 0.1f;
     private UnitState state = UnitState.Battle;
-    
+
+    private bool canChangeRange = true;
+
     [SerializeField]
     private GameObject range;
     private Collider2D rangeCollider;
@@ -47,9 +49,9 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
             
         if (weapon != null)
             InvokeRepeating("Shoot", attackTime, attackTime);
-        
-        DisableAim();
-            
+
+        if (range.GetComponent<SpriteRenderer>().enabled)
+            range.GetComponent<SpriteRenderer>().enabled = false;
     }
 
     void Update()
@@ -93,12 +95,6 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
             state = UnitState.Aim;
     }
 
-    void EnableAim()
-    {
-        if (!range.GetComponent<SpriteRenderer>().enabled)
-            range.GetComponent<SpriteRenderer>().enabled = true;
-    }
-
 
     public void OnBeginDrag(PointerEventData data)
     {
@@ -112,17 +108,27 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
 
     public void OnDrag(PointerEventData data)
     {
-
-        touchPos = data.position;
-        touchPos = Camera.main.ScreenToWorldPoint(touchPos);
-        print(touchPos);
-        range.transform.rotation = Quaternion.Euler(new Vector3(0, 0, Mathf.Atan2((range.transform.position.y - touchPos.y), (range.transform.position.x - touchPos.x)) * Mathf.Rad2Deg));
+        if (canChangeRange)
+        {
+            touchPos = data.position;
+            touchPos = Camera.main.ScreenToWorldPoint(touchPos);
+            print(touchPos);
+            range.transform.rotation = Quaternion.Euler(new Vector3(0, 0, Mathf.Atan2((range.transform.position.y - touchPos.y), (range.transform.position.x - touchPos.x)) * Mathf.Rad2Deg));
+        }
+    }
+    
+    void EnableAim()
+    {
+        if (!range.GetComponent<SpriteRenderer>().enabled && canChangeRange)
+            range.GetComponent<SpriteRenderer>().enabled = true;
     }
 
     void DisableAim()
     {
         if (range.GetComponent<SpriteRenderer>().enabled)
             range.GetComponent<SpriteRenderer>().enabled = false;
+
+        canChangeRange = false;
     }
     
     void Shoot()

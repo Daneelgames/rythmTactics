@@ -17,6 +17,8 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
 
     public GameObject weapon;
 
+    public int cost = 1;
+
     /*
     public float rangeAngle = 15;
     public float rangeLength = 1;
@@ -128,6 +130,7 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
         if (range.GetComponent<SpriteRenderer>().enabled)
             range.GetComponent<SpriteRenderer>().enabled = false;
 
+        _animator.SetBool("Active", false);
         canChangeRange = false;
     }
     

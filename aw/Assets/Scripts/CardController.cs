@@ -72,36 +72,36 @@ public class CardController : MonoBehaviour, IPointerClickHandler {
             case 0:
                 card = UnitType.Soldier;
                 currentSprite.sprite = unitSprites[0];
-                cost = 1;
                 curUnit = units[0];
+                cost = curUnit.GetComponent<UnitController>().cost;
                 break;
 
             case 1:
                 card = UnitType.Helicopter;
                 currentSprite.sprite = unitSprites[1];
-                cost = 2;
                 curUnit = units[1];
+                cost = curUnit.GetComponent<UnitController>().cost;
                 break;
 
             case 2:
                 card = UnitType.Tank;
                 currentSprite.sprite = unitSprites[2];
-                cost = 3;
                 curUnit = units[2];
+                cost = curUnit.GetComponent<UnitController>().cost;
                 break;
 
             case 3:
                 card = UnitType.Wall ;
                 currentSprite.sprite = unitSprites[3];
-                cost = 3;
                 curUnit = units[3];
+                cost = curUnit.GetComponent<UnitController>().cost;
                 break;
 
             default:
                 card = UnitType.Soldier;
                 currentSprite.sprite = unitSprites[0];
-                cost = 1;
                 curUnit = units[0];
+                cost = curUnit.GetComponent<UnitController>().cost;
                 break;
         }
 

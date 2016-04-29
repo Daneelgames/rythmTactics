@@ -25,20 +25,16 @@ public class HealthController : MonoBehaviour {
     private float minFill = 0f;
     private float maxFill = 1f;
 
+    [SerializeField]
+    private float dyingRate = 1f;
     private bool dying = false;
-
-    private TurnManager gameManager;
+    
 
     [SerializeField]
     private bool isBase = false;
 
     void Awake()
     {
-        gameManager = GameObject.Find("BattleManager").GetComponent<TurnManager>();
-        if (unitColor == UnitColor.Red)
-            gameManager.redUnits += 1;
-        else
-            gameManager.blueUnits += 1;
 
         content = transform.Find("Canvas/HealthBack/Health").GetComponent<Image>();
     }
@@ -60,9 +56,9 @@ public class HealthController : MonoBehaviour {
             dying = true;
 
         if (dying && unitColor == UnitColor.Red)
-            curHealth -= 1 * Time.deltaTime + gameManager.redUnits / 10;
+            curHealth -= 1 * Time.deltaTime * dyingRate;
         else if (dying && unitColor == UnitColor.Blue)
-            curHealth -= 1 * Time.deltaTime + gameManager.blueUnits / 10;
+            curHealth -= 1 * Time.deltaTime * dyingRate;
 
         if (curHealth <= 0)
                 DestroyUnit();
@@ -94,12 +90,6 @@ public class HealthController : MonoBehaviour {
     public void DestroyUnit()
     {
         Instantiate(explosion, transform.position, transform.rotation);
-        
-        if (unitColor == UnitColor.Red)
-            gameManager.redUnits -= 1;
-        else
-            gameManager.blueUnits -= 1;
-
         Destroy(gameObject);
     }
 }

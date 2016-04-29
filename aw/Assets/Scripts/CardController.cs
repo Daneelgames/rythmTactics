@@ -277,22 +277,49 @@ public class CardController : MonoBehaviour {
     
     void MouseUp()
     {
-        if (Input.GetMouseButtonUp(0) && moving && isActive && mouseUpCooldown <= 0)
+        if (Input.touchCount > 0 && moving && isActive && mouseUpCooldown <= 0)
         {
-            Vector3 mousePos = Input.mousePosition;
-            mousePos.z = 10f;
-            mousePos = Camera.main.ScreenToWorldPoint(mousePos);
+            Vector2 touchPos = Vector2.zero;
             
+            foreach (Touch touch in Input.touches)
+            {
+                if (cardColor == UnitColor.Red && touch.position.y < 1.25)
+                {
+                    touchPos = touch.position;
+                    touchPos = Camera.main.ScreenToWorldPoint(touchPos);
+                }
+                if (cardColor == UnitColor.Blue && touch.position.y > 1.25)
+                {
+                    touchPos = touch.position;
+                    touchPos = Camera.main.ScreenToWorldPoint(touchPos);
+                }
+            }
+
+            /*
+            if (Input.touchCount < 2 && Input.GetTouch(0).phase == TouchPhase.Began)
+            {
+                touchPos = Input.GetTouch(0).position;
+                touchPos = Camera.main.ScreenToWorldPoint(touchPos);
+            }
+            else if  (Input.touchCount > 1 && Input.GetTouch(1).phase == TouchPhase.Began)
+            {
+                touchPos = Input.GetTouch(1).position;
+                touchPos = Camera.main.ScreenToWorldPoint(touchPos);
+            }
+            */
+
+
             GameObject closestCell = null;
             foreach (CellController cell in availableCells)
             {
 
-                if (Vector2.Distance(mousePos, cell.gameObject.transform.position) < 0.5)
+                if (Vector2.Distance(touchPos, cell.gameObject.transform.position) < 0.5)
                     closestCell = cell.gameObject;
             }
 
             if (closestCell != null)
                 BuyUnit(closestCell.transform.position);
+
             else
             {
                 GameObject closestAllie = null;
@@ -303,30 +330,16 @@ public class CardController : MonoBehaviour {
                 else
                     alliesCards = GameObject.FindGameObjectsWithTag("UnitBlue");
 
-                if (Vector2.Distance(mousePos, gameObject.transform.position) > 0.5)
+                if (Vector2.Distance(touchPos, gameObject.transform.position) > 0.5)
                 {
                     foreach (GameObject card in alliesCards)
                     {
-                        if (Vector2.Distance(mousePos, card.transform.position) < 0.5)
+                        if (Vector2.Distance(touchPos, card.transform.position) < 0.5)
                         {
                             closestAllie = card;
                         }
                     }
                 }
-              /*  if (closestAllie == null)
-                {
-                    moving = false;
-                    if (cardColor == UnitColor.Red)
-                        gameManager.selectedCardRed = null;
-                    else
-                        gameManager.selectedCardBlue = null;
-
-                    backgroundSprite.color = Color.black;
-                    foreach (CellController cell in availableCells)
-                    {
-                        cell.ReturnColor();
-                    }
-                } */
             }
         }
     }

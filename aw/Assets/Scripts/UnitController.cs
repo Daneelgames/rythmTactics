@@ -32,8 +32,7 @@ public class UnitController : MonoBehaviour {
     [SerializeField]
     private List<GameObject> enemiesInRange;
 
-    Vector2 touchPos_1;
-    Vector2 touchPos_2;
+    Vector2 touchPos;
 
     void Start () {
         if (cardColor == UnitColor.Red)
@@ -53,7 +52,7 @@ public class UnitController : MonoBehaviour {
         if (rangeCooldown > 0)
             rangeCooldown -= 1 * Time.deltaTime;
 
-        if (Input.GetMouseButton(0) && state == UnitState.Aim && rangeCooldown <= 0)
+        if (state == UnitState.Aim)
         {
             SetRangeAngle();
         }
@@ -68,28 +67,30 @@ public class UnitController : MonoBehaviour {
             Battle();
         }
 
-/*
-        Vector2 mousePos = Input.mousePosition;
-        mousePos = new Vector3(mousePos.x, mousePos.y, 10f);
-        mousePos = Camera.main.ScreenToWorldPoint(mousePos);
-*/
+        /*
+                Vector2 mousePos = Input.mousePosition;
+                mousePos = new Vector3(mousePos.x, mousePos.y, 10f);
+                mousePos = Camera.main.ScreenToWorldPoint(mousePos);
+        */
+        
+        foreach (Touch touch in Input.touches)
+        {
+            if (cardColor == UnitColor.Red && touch.position.y < 1.25)
+            {
+                touchPos = touch.position;
+                touchPos = Camera.main.ScreenToWorldPoint(touchPos);
+            }
+            if (cardColor == UnitColor.Blue && touch.position.y > 1.25)
+            {
+                touchPos = touch.position;
+                touchPos = Camera.main.ScreenToWorldPoint(touchPos);
+            }
+        }
 
         if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
         {
-            touchPos_1 = Input.GetTouch(0).position;
-            touchPos_1 = Camera.main.ScreenToWorldPoint(touchPos_1);
 
-            if (Vector2.Distance(transform.position, (Vector3)touchPos_1) < 1.3)
-            {
-                MouseDown();
-            }
-        }
-        if (Input.touchCount > 1 && Input.GetTouch(1).phase == TouchPhase.Began)
-        {
-            touchPos_2 = Input.GetTouch(1).position;
-            touchPos_2 = Camera.main.ScreenToWorldPoint(touchPos_2);
-
-            if (Vector2.Distance(transform.position, (Vector3)touchPos_2) < 1.3)
+            if (Vector2.Distance(transform.position, (Vector3)touchPos) < 1.3)
             {
                 MouseDown();
             }
@@ -102,7 +103,7 @@ public class UnitController : MonoBehaviour {
 
     void MouseDown()
     {
-        if (weapon != null)
+        if (weapon != null && rangeCooldown <= 0)
             state = UnitState.Aim;
     }
 
@@ -110,7 +111,7 @@ public class UnitController : MonoBehaviour {
     {
         if (!range.GetComponent<SpriteRenderer>().enabled)
             range.GetComponent<SpriteRenderer>().enabled = true;
-
+        /*
         Vector2 mousePos = Input.mousePosition;
         mousePos = new Vector3(mousePos.x, mousePos.y, 10f);
         mousePos = Camera.main.ScreenToWorldPoint(mousePos);
@@ -118,8 +119,25 @@ public class UnitController : MonoBehaviour {
             mousePos = new Vector3(mousePos.x, 1.25f, 10f);
         if (mousePos.y > 1.25f && cardColor == UnitColor.Red)
             mousePos = new Vector3(mousePos.x, 1.25f, 10f);
+        */
 
-        range.transform.rotation = Quaternion.Euler(new Vector3(0,0, Mathf.Atan2((range.transform.position.y - mousePos.y), (range.transform.position.x - mousePos.x)) * Mathf.Rad2Deg));
+        Vector2 touchPos = Vector2.zero;
+
+        foreach (Touch touch in Input.touches)
+        {
+            if (cardColor == UnitColor.Red && touch.position.y < 1.25)
+            {
+                touchPos = touch.position;
+                touchPos = Camera.main.ScreenToWorldPoint(touchPos);
+            }
+            if (cardColor == UnitColor.Blue && touch.position.y > 1.25)
+            {
+                touchPos = touch.position;
+                touchPos = Camera.main.ScreenToWorldPoint(touchPos);
+            }
+        }
+
+        range.transform.rotation = Quaternion.Euler(new Vector3(0,0, Mathf.Atan2((range.transform.position.y - touchPos.y), (range.transform.position.x - touchPos.x)) * Mathf.Rad2Deg));
     }
 
     void Battle()

@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 using System.Linq;
 
-public class UnitController : MonoBehaviour {
+public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler
+{
     
     public UnitColor cardColor = UnitColor.Red;
     private enum UnitState {Aim, Battle};
@@ -119,7 +121,7 @@ public class UnitController : MonoBehaviour {
             mousePos = new Vector3(mousePos.x, 1.25f, 10f);
         if (mousePos.y > 1.25f && cardColor == UnitColor.Red)
             mousePos = new Vector3(mousePos.x, 1.25f, 10f);
-        */
+        
 
         Vector2 touchPos = Vector2.zero;
 
@@ -138,6 +140,27 @@ public class UnitController : MonoBehaviour {
         }
 
         range.transform.rotation = Quaternion.Euler(new Vector3(0,0, Mathf.Atan2((range.transform.position.y - touchPos.y), (range.transform.position.x - touchPos.x)) * Mathf.Rad2Deg));
+        */
+    }
+
+
+    public void OnBeginDrag(PointerEventData data)
+    {
+        print("beginDrag");
+    }
+
+    public void OnEndDrag(PointerEventData data)
+    {
+        print("endDrag");
+    }
+
+    public void OnDrag(PointerEventData data)
+    {
+
+        touchPos = data.position;
+        touchPos = Camera.main.ScreenToWorldPoint(touchPos);
+        print(touchPos);
+        range.transform.rotation = Quaternion.Euler(new Vector3(0, 0, Mathf.Atan2((range.transform.position.y - touchPos.y), (range.transform.position.x - touchPos.x)) * Mathf.Rad2Deg));
     }
 
     void Battle()

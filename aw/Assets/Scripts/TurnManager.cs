@@ -6,6 +6,13 @@ using UnityEngine.SceneManagement;
 
 public class TurnManager : MonoBehaviour {
     
+    static TurnManager _instance;
+    
+    public static TurnManager instance {
+        get {
+            return _instance;
+        }
+    }
 
     public int redMana = 1;
     public int blueMana = 1;
@@ -24,6 +31,14 @@ public class TurnManager : MonoBehaviour {
     private GameObject redBase;
     [SerializeField]
     private GameObject blueBase;
+    
+    void Awake(){
+        if (_instance == null){
+            _instance = this;
+        } else if (_instance != this){
+            Destroy(gameObject);
+        }
+    }
 
     void Start()
     {

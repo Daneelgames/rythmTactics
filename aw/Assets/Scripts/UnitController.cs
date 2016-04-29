@@ -47,10 +47,14 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
             
         if (weapon != null)
             InvokeRepeating("Shoot", attackTime, attackTime);
+        
+        DisableAim();
+            
     }
 
     void Update()
     {
+        /*
         if (rangeCooldown > 0)
             rangeCooldown -= 1 * Time.deltaTime;
 
@@ -68,6 +72,7 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
         {
             Battle();
         }
+        */
 
         /*
                 Vector2 mousePos = Input.mousePosition;
@@ -75,28 +80,7 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
                 mousePos = Camera.main.ScreenToWorldPoint(mousePos);
         */
         
-        foreach (Touch touch in Input.touches)
-        {
-            if (cardColor == UnitColor.Red && touch.position.y < 1.25)
-            {
-                touchPos = touch.position;
-                touchPos = Camera.main.ScreenToWorldPoint(touchPos);
-            }
-            if (cardColor == UnitColor.Blue && touch.position.y > 1.25)
-            {
-                touchPos = touch.position;
-                touchPos = Camera.main.ScreenToWorldPoint(touchPos);
-            }
-        }
-
-        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
-        {
-
-            if (Vector2.Distance(transform.position, (Vector3)touchPos) < 1.3)
-            {
-                MouseDown();
-            }
-        }
+       
 /*
         if (Vector2.Distance(transform.position, mousePos) < 1.5 && Input.GetMouseButtonDown(0))
             MouseDown();
@@ -109,49 +93,21 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
             state = UnitState.Aim;
     }
 
-    void SetRangeAngle()
+    void EnableAim()
     {
         if (!range.GetComponent<SpriteRenderer>().enabled)
             range.GetComponent<SpriteRenderer>().enabled = true;
-        /*
-        Vector2 mousePos = Input.mousePosition;
-        mousePos = new Vector3(mousePos.x, mousePos.y, 10f);
-        mousePos = Camera.main.ScreenToWorldPoint(mousePos);
-        if (mousePos.y < 1.25f && cardColor == UnitColor.Blue)
-            mousePos = new Vector3(mousePos.x, 1.25f, 10f);
-        if (mousePos.y > 1.25f && cardColor == UnitColor.Red)
-            mousePos = new Vector3(mousePos.x, 1.25f, 10f);
-        
-
-        Vector2 touchPos = Vector2.zero;
-
-        foreach (Touch touch in Input.touches)
-        {
-            if (cardColor == UnitColor.Red && touch.position.y < 1.25)
-            {
-                touchPos = touch.position;
-                touchPos = Camera.main.ScreenToWorldPoint(touchPos);
-            }
-            if (cardColor == UnitColor.Blue && touch.position.y > 1.25)
-            {
-                touchPos = touch.position;
-                touchPos = Camera.main.ScreenToWorldPoint(touchPos);
-            }
-        }
-
-        range.transform.rotation = Quaternion.Euler(new Vector3(0,0, Mathf.Atan2((range.transform.position.y - touchPos.y), (range.transform.position.x - touchPos.x)) * Mathf.Rad2Deg));
-        */
     }
 
 
     public void OnBeginDrag(PointerEventData data)
     {
-        print("beginDrag");
+        EnableAim();
     }
 
     public void OnEndDrag(PointerEventData data)
     {
-        print("endDrag");
+        DisableAim();
     }
 
     public void OnDrag(PointerEventData data)
@@ -163,7 +119,7 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
         range.transform.rotation = Quaternion.Euler(new Vector3(0, 0, Mathf.Atan2((range.transform.position.y - touchPos.y), (range.transform.position.x - touchPos.x)) * Mathf.Rad2Deg));
     }
 
-    void Battle()
+    void DisableAim()
     {
         if (range.GetComponent<SpriteRenderer>().enabled)
             range.GetComponent<SpriteRenderer>().enabled = false;

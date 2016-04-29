@@ -1,12 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Linq;
+using System;
 
 public enum UnitColor {Red, Blue};
 
-public class CardController : MonoBehaviour {
+public class CardController : MonoBehaviour, IPointerClickHandler {
 
     public enum UnitType {Soldier, Helicopter, Tank, Wall};
     [SerializeField]
@@ -63,7 +65,7 @@ public class CardController : MonoBehaviour {
 
         transform.position = originalPosition;
 
-        int random = Random.Range(0, 4);
+        int random = UnityEngine.Random.Range(0, 4);
 
         switch (random)
         {
@@ -106,44 +108,10 @@ public class CardController : MonoBehaviour {
         costText.text = "" + cost;
     }
 
-    void Update()
-    {
-        MouseUp();
+
+    void Update(){
         SetActive();
-
-        if (mouseUpCooldown > 0)
-            mouseUpCooldown -= 1 * Time.deltaTime;
-        
-        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
-        {
-            touchPos_1 = Input.GetTouch(0).position;
-            touchPos_1 = Camera.main.ScreenToWorldPoint(touchPos_1);
-
-            if (Vector2.Distance(transform.position, (Vector3)touchPos_1) < 1.3)
-            {
-                MouseDown();
-            }
-        }
-        if (Input.touchCount > 1 && Input.GetTouch(1).phase == TouchPhase.Began)
-        {
-            touchPos_2 = Input.GetTouch(1).position;
-            touchPos_2 = Camera.main.ScreenToWorldPoint(touchPos_2);
-
-            if (Vector2.Distance(transform.position, (Vector3)touchPos_2) < 1.3)
-            {
-                MouseDown();
-            }
-        }
-        /*
-        Vector2 mousePos = Input.mousePosition;
-        mousePos = new Vector3(mousePos.x, mousePos.y, 10f);
-        mousePos = Camera.main.ScreenToWorldPoint(mousePos);
-
-        if (Vector2.Distance(transform.position, mousePos) < 1.5 && Input.GetMouseButtonDown(0))
-            MouseDown();
-        */
     }
-
     void SetActive()
     {
         if (cardColor == UnitColor.Red)
@@ -330,7 +298,7 @@ public class CardController : MonoBehaviour {
         }
     }
 
-    void BuyUnit(Vector2 spawnPosition)
+    public void BuyUnit(Vector2 spawnPosition)
     {
         print("buy unit");
 
@@ -356,5 +324,10 @@ public class CardController : MonoBehaviour {
         Instantiate(curUnit, spawnPosition, Quaternion.Euler(0,0,0));
 
         ChooseUnit();
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        MouseDown();
     }
 }

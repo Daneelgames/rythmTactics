@@ -56,47 +56,47 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
             range.GetComponent<SpriteRenderer>().enabled = false;
     }
 
+    /*
     void Update()
     {
-        /*
-        if (rangeCooldown > 0)
-            rangeCooldown -= 1 * Time.deltaTime;
+    if (rangeCooldown > 0)
+    rangeCooldown -= 1 * Time.deltaTime;
 
-        if (state == UnitState.Aim)
-        {
-            SetRangeAngle();
-        }
+    if (state == UnitState.Aim)
+    {
+    SetRangeAngle();
+    }
 
-        if (Input.GetMouseButtonUp(0) && state == UnitState.Aim && rangeCooldown <= 0)
-        {
-            state = UnitState.Battle;
-        }
+    if (Input.GetMouseButtonUp(0) && state == UnitState.Aim && rangeCooldown <= 0)
+    {
+    state = UnitState.Battle;
+    }
 
-        if (state == UnitState.Battle)
-        {
-            Battle();
-        }
-        */
+    if (state == UnitState.Battle)
+    {
+    Battle();
+    }
+    */
 
-        /*
-                Vector2 mousePos = Input.mousePosition;
-                mousePos = new Vector3(mousePos.x, mousePos.y, 10f);
-                mousePos = Camera.main.ScreenToWorldPoint(mousePos);
-        */
-        
-       
-/*
-        if (Vector2.Distance(transform.position, mousePos) < 1.5 && Input.GetMouseButtonDown(0))
-            MouseDown();
-*/
+    /*
+    Vector2 mousePos = Input.mousePosition;
+    mousePos = new Vector3(mousePos.x, mousePos.y, 10f);
+    mousePos = Camera.main.ScreenToWorldPoint(mousePos);
+    */
+
+
+    /*
+    if (Vector2.Distance(transform.position, mousePos) < 1.5 && Input.GetMouseButtonDown(0))
+    MouseDown();
     }
 
     void MouseDown()
     {
-        if (weapon != null && rangeCooldown <= 0)
-            state = UnitState.Aim;
+    if (weapon != null && rangeCooldown <= 0)
+    state = UnitState.Aim;
     }
 
+    */
 
     public void OnBeginDrag(PointerEventData data)
     {
@@ -123,6 +123,8 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
     {
         if (!range.GetComponent<SpriteRenderer>().enabled && canChangeRange)
             range.GetComponent<SpriteRenderer>().enabled = true;
+
+        state = UnitState.Aim;
     }
 
     void DisableAim()
@@ -131,6 +133,7 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
             range.GetComponent<SpriteRenderer>().enabled = false;
 
         _animator.SetBool("Active", false);
+        state = UnitState.Battle;
         canChangeRange = false;
     }
     
@@ -156,7 +159,7 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
             }
         }
 
-        if (target != null)
+        if (target != null && state == UnitState.Battle)
         {
             _animator.SetTrigger("Attack");
             GameObject projectile = Instantiate(weapon, transform.position, transform.rotation) as GameObject;

@@ -10,7 +10,7 @@ public enum UnitColor {Red, Blue};
 
 public class CardController : MonoBehaviour, IPointerClickHandler {
 
-    public enum UnitType {Soldier, Helicopter, Tank, Wall};
+    public enum UnitType {Soldier, Helicopter, Tank, Wall, Ship, Airplane};
     [SerializeField]
     private UnitType card = UnitType.Soldier;
     
@@ -65,11 +65,16 @@ public class CardController : MonoBehaviour, IPointerClickHandler {
 
         transform.position = originalPosition;
 
-        int random = UnityEngine.Random.Range(0, 4);
+        int random = UnityEngine.Random.Range(0, 6);
 
         switch (random)
         {
             case 0:
+                if (card == UnitType.Soldier)
+                {
+                    ChooseUnit();
+                    break;
+                }
                 card = UnitType.Soldier;
                 currentSprite.sprite = unitSprites[0];
                 curUnit = units[0];
@@ -77,6 +82,11 @@ public class CardController : MonoBehaviour, IPointerClickHandler {
                 break;
 
             case 1:
+                if (card == UnitType.Helicopter)
+                {
+                    ChooseUnit();
+                    break;
+                }
                 card = UnitType.Helicopter;
                 currentSprite.sprite = unitSprites[1];
                 curUnit = units[1];
@@ -84,6 +94,11 @@ public class CardController : MonoBehaviour, IPointerClickHandler {
                 break;
 
             case 2:
+                if (card == UnitType.Tank)
+                {
+                    ChooseUnit();
+                    break;
+                }
                 card = UnitType.Tank;
                 currentSprite.sprite = unitSprites[2];
                 curUnit = units[2];
@@ -91,9 +106,38 @@ public class CardController : MonoBehaviour, IPointerClickHandler {
                 break;
 
             case 3:
+                if (card == UnitType.Wall)
+                {
+                    ChooseUnit();
+                    break;
+                }
                 card = UnitType.Wall ;
                 currentSprite.sprite = unitSprites[3];
                 curUnit = units[3];
+                cost = curUnit.GetComponent<UnitController>().cost;
+                break;
+
+            case 4:
+                if (card == UnitType.Ship)
+                {
+                    ChooseUnit();
+                    break;
+                }
+                card = UnitType.Ship;
+                currentSprite.sprite = unitSprites[4];
+                curUnit = units[4];
+                cost = curUnit.GetComponent<UnitController>().cost;
+                break;
+
+            case 5:
+                if (card == UnitType.Airplane)
+                {
+                    ChooseUnit();
+                    break;
+                }
+                card = UnitType.Airplane;
+                currentSprite.sprite = unitSprites[5];
+                curUnit = units[5];
                 cost = curUnit.GetComponent<UnitController>().cost;
                 break;
 

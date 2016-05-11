@@ -32,6 +32,9 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
 
     private bool canChangeRange = true;
 
+
+    [SerializeField]
+    private SpriteRenderer rangeSprite;
     [SerializeField]
     private GameObject range;
     private Collider2D rangeCollider;
@@ -52,8 +55,8 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
         if (weapon != null)
             InvokeRepeating("Shoot", attackTime, attackTime);
 
-        if (range.GetComponent<SpriteRenderer>().enabled)
-            range.GetComponent<SpriteRenderer>().enabled = false;
+        if (rangeSprite.enabled)
+            rangeSprite.enabled = false;
     }
 
     /*
@@ -121,16 +124,16 @@ public class UnitController : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
     
     void EnableAim()
     {
-        if (!range.GetComponent<SpriteRenderer>().enabled && canChangeRange)
-            range.GetComponent<SpriteRenderer>().enabled = true;
+        if (!rangeSprite.enabled && canChangeRange)
+            rangeSprite.enabled = true;
 
         state = UnitState.Aim;
     }
 
     void DisableAim()
     {
-        if (range.GetComponent<SpriteRenderer>().enabled)
-            range.GetComponent<SpriteRenderer>().enabled = false;
+        if (rangeSprite.enabled)
+            rangeSprite.enabled = false;
 
         _animator.SetBool("Active", false);
         state = UnitState.Battle;
